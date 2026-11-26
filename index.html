@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Analizador de tickets de mantenimiento informatico</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div class="eyebrow"><span class="logo">▤</span> MESA DE SOPORTE <span class="eyebrow-line"></span> PROYECTO DE COMPILADORES</div>
+      <h1>Analizador de tickets de<br><span>mantenimiento informático</span></h1>
+      <p>Carga o escribe un ticket y revisa, paso a paso, cómo se reconoce su estructura, se comprueban sus reglas y se genera una salida JSON.</p>
+      <div class="hero-note"><span class="dot"></span> Prototipo académico · Datos de demostración sintéticos</div>
+    </header>
+
+    <section class="flow" aria-label="Proceso de analisis">
+      <div class="step" id="step-input">
+        <div class="step-head blue"><div><small>PASO 01 / ENTRADA</small><h2>Carga del ticket</h2></div><span class="step-number">01</span></div>
+        <div class="step-body">
+          <div class="input-grid">
+            <div class="upload" id="dropZone">
+              <div class="upload-icon">⇧</div>
+              <strong>Arrastra tu archivo aquí</strong>
+              <span>o selecciónalo desde tu dispositivo</span>
+              <label class="button button-blue" for="fileInput">Seleccionar archivo TXT</label>
+              <input id="fileInput" type="file" accept=".txt,text/plain" hidden>
+              <small id="fileName">Formato admitido: .TXT · Un ticket por archivo</small>
+            </div>
+            <div class="editor">
+              <div class="editor-top"><label for="ticketText">También puedes escribir o pegar el ticket</label><span>ENTRADA FORMAL</span></div>
+              <textarea id="ticketText" spellcheck="false" placeholder="TICKET TK-001; EQUIPO=EQ-001; TIPO=correctivo; ..."></textarea>
+              <div class="editor-actions"><button type="button" class="text-button" id="validExample">Usar ejemplo válido</button><button type="button" class="text-button" id="invalidExample">Usar ejemplo con error</button><button type="button" class="text-button" id="clearInput">Limpiar</button></div>
+            </div>
+          </div>
+          <div class="format-example"><div class="format-header"><div><small>FORMATO ESPERADO</small><h3>Ejemplo de ticket válido</h3></div><button type="button" class="text-button" id="useShownExample">Usar este ejemplo →</button></div><pre>TICKET TK-001; EQUIPO=EQ-001; TIPO=correctivo; PRIORIDAD=alta; ESTADO=cerrado; APERTURA=2026-10-01; DIAGNOSTICO=cambio_de_disco; CIERRE=2026-10-02</pre><p>Los campos deben aparecer en ese orden. Se admiten saltos de línea entre campos.</p></div>
+          <div class="action-row"><p>El lenguaje exige los campos en un orden fijo. Se admiten espacios y saltos de línea entre ellos.</p><button class="button button-blue analyze" id="analyzeButton" type="button">Analizar ticket <span>→</span></button></div>
+        </div>
+      </div>
+
+      <div class="connector"><span>↓</span></div>
+      <div class="step" id="step-result">
+        <div class="step-head coral"><div><small>PASO 02 / DIAGNÓSTICO</small><h2>Resultado del análisis</h2></div><span class="step-number">02</span></div>
+        <div class="step-body"><div class="result-empty" id="resultBox"><div class="empty-icon">▤</div><strong>Esperando un ticket</strong><p>El resultado aparecerá aquí después de analizar la entrada.</p></div></div>
+      </div>
+
+      <div class="connector"><span>↓</span></div>
+      <div class="step" id="step-process">
+        <div class="step-head navy"><div><small>PASO 03 / PROCESO INTERNO</small><h2>¿Qué revisó el analizador?</h2></div><span class="step-number">03</span></div>
+        <div class="step-body"><div class="tabs" role="tablist" aria-label="Vistas del proceso interno"><button type="button" class="tab active" id="tab-summary" role="tab" aria-selected="true" aria-controls="panel-summary" data-panel="summary">Resumen del análisis</button><button type="button" class="tab" id="tab-tokens" role="tab" aria-selected="false" aria-controls="panel-tokens" data-panel="tokens">Cada token</button><button type="button" class="tab" id="tab-grammar" role="tab" aria-selected="false" aria-controls="panel-grammar" data-panel="grammar">Gramática y árbol</button></div><div id="panel-summary" role="tabpanel" aria-labelledby="tab-summary"><div class="stage-grid">
+          <article class="stage-card"><div class="stage-label"><span>01</span><h3>Análisis léxico</h3></div><p>Reconoce los valores como códigos, fechas, estados y prioridades.</p><div id="lexicalContent" class="stage-content muted">Analiza un ticket para ver sus tokens.</div></article>
+          <article class="stage-card"><div class="stage-label"><span>02</span><h3>Análisis sintáctico</h3></div><p>Comprueba que los campos aparezcan en el orden definido por la gramática.</p><div id="syntaxContent" class="stage-content muted">La estructura aún no se ha comprobado.</div></article>
+          <article class="stage-card"><div class="stage-label"><span>03</span><h3>Análisis semántico</h3></div><p>Verifica fechas reales y coherencia entre estado, diagnóstico y cierre.</p><div id="semanticContent" class="stage-content muted">Las reglas se muestran tras una entrada sintácticamente válida.</div></article>
+        </div></div><div id="panel-tokens" role="tabpanel" aria-labelledby="tab-tokens" hidden><div class="token-intro"><h3>Detalle de cada token identificado</h3><p>Incluye palabras clave, separadores y valores. El patrón describe la clase del token. Los diagramas AFN y AFD muestran el recorrido que acepta exactamente el valor encontrado.</p></div><div id="tokenDetails" class="token-details empty-panel">Analiza un ticket para ver el detalle de sus tokens.</div></div><div id="panel-grammar" role="tabpanel" aria-labelledby="tab-grammar" hidden><div class="grammar-grid"><div><h3>Producción principal</h3><pre>start → TICKET ID ; EQUIPO = ID ;
+        TIPO = TIPO ; PRIORIDAD = PRIORIDAD ;
+        ESTADO = ESTADO ; APERTURA = FECHA ;
+        DIAGNOSTICO = VALOR ; CIERRE = (FECHA | NA)</pre><p>Lark comprueba esta secuencia mediante un analizador LALR.</p></div><div><h3>Árbol sintáctico del ticket</h3><div id="syntaxTree" class="syntax-tree empty-panel">Analiza un ticket con sintaxis válida para ver el árbol.</div></div></div></div></div>
+      </div>
+
+      <div class="connector"><span>↓</span></div>
+      <div class="step" id="step-output">
+        <div class="step-head teal"><div><small>PASO 04 / SALIDA</small><h2>Traducción a JSON</h2></div><span class="step-number">04</span></div>
+        <div class="step-body output-wrap"><div><p class="output-intro">Un ticket válido se convierte en datos estructurados que otro sistema podría leer.</p><p class="output-note">Esta salida se genera únicamente si supera las tres etapas.</p><button type="button" class="button button-outline" id="copyJson" disabled>Copiar JSON</button></div><pre id="jsonOutput">Esperando un ticket válido...</pre></div>
+      </div>
+    </section>
+
+    <section class="reference" aria-labelledby="referenceTitle"><div class="reference-title"><small>REFERENCIA RÁPIDA</small><h2 id="referenceTitle">Reglas del lenguaje</h2><p>El prototipo usa una gramática de campos y reglas de negocio para tickets informáticos.</p></div><div class="reference-grid"><div><h3>Campos obligatorios</h3><p>Ticket · Equipo · Tipo · Prioridad · Estado · Apertura · Diagnóstico · Cierre</p></div><div><h3>Valores admitidos</h3><p>Tipo: preventivo o correctivo. Prioridad: baja, media o alta. Estado: abierto, asignado, en_proceso o cerrado.</p></div><div><h3>Reglas de cierre</h3><p>Un ticket cerrado necesita diagnóstico y fecha de cierre. Uno no cerrado debe indicar <code>CIERRE=NA</code>.</p></div></div></section>
+    <footer>Proyecto académico · Analizador formal de tickets de mantenimiento informático</footer>
+  </main>
+  <script id="examples" type="application/json">{"valid":"TICKET TK-001; EQUIPO=EQ-001; TIPO=correctivo; PRIORIDAD=alta; ESTADO=cerrado; APERTURA=2026-10-01; DIAGNOSTICO=cambio_de_disco; CIERRE=2026-10-02","invalid":"TICKET TK-002; EQUIPO=EQ-003; TIPO=correctivo; PRIORIDAD=alta; ESTADO=cerrado; APERTURA=2026-10-03; DIAGNOSTICO=pendiente; CIERRE=NA"}</script>
+</body>
+</html>
+
+
